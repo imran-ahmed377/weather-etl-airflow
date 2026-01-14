@@ -1,6 +1,23 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: weather-etl-postgres
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - airflow-network
+
   airflow:
     build:
       context: .
@@ -10,9 +27,9 @@ services:
       - AIRFLOW_HOME=/home/airflow
       - AIRFLOW__CORE__DAGS_FOLDER=/home/airflow/dags
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////home/airflow/airflow.db
-      - AIRFLOW__CORE__FERNET_KEY=Drmhze6EPcv0fN_81Bj-nA
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=81HqDtbqAywKSOumSic9GL2CsUg_Wp2ySmqst-- EXAMPLE_FERNET_KEY --
     ports:
       - "8080:8080"
     volumes:
@@ -20,13 +37,10 @@ services:
       - ./logs:/home/airflow/logs
       - ./config:/home/airflow/config
       - ./data:/home/airflow/data
-      - airflow-db:/home/airflow
-    command: >
-      bash -c "airflow db init &&
-               airflow users create --username admin --password admin 
-               --firstname Admin --lastname User --role Admin 
-               --email admin@example.com || true &&
-               airflow webserver --port 8080"
+    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com 2>/dev/null || true && airflow webserver --port 8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -45,15 +59,14 @@ services:
       - AIRFLOW_HOME=/home/airflow
       - AIRFLOW__CORE__DAGS_FOLDER=/home/airflow/dags
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////home/airflow/airflow.db
-      - AIRFLOW__CORE__FERNET_KEY=Drmhze6EPcv0fN_81Bj-nA
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=81HqDtbqAywKSOumSic9GL2CsUg_Wp2ySmqst-- EXAMPLE_FERNET_KEY --
     volumes:
       - ./dags:/home/airflow/dags
       - ./logs:/home/airflow/logs
       - ./config:/home/airflow/config
       - ./data:/home/airflow/data
-      - airflow-db:/home/airflow
     command: airflow scheduler
     depends_on:
       airflow:
@@ -62,7 +75,7 @@ services:
       - airflow-network
 
 volumes:
-  airflow-db:
+  postgres-db-volume:
 
 networks:
   airflow-network:

@@ -1,6 +1,8 @@
 apache-airflow==2.7.3
+apache-airflow-providers-postgres==5.9.0
 requests==2.31.0
 pandas==2.0.0
 python-dotenv==1.0.0
+psycopg2-binary==2.9.9
 pytest==7.4.3
 pytest-cov==4.1.0
