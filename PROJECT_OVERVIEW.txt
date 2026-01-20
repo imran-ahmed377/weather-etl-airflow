@@ -1,0 +1,143 @@
+================================================================================
+                    WEATHER ETL AIRFLOW PROJECT - OVERVIEW
+================================================================================
+
+WHAT IS THIS PROJECT?
+---------------------
+A simple automation tool that fetches weather data every day, cleans it, and 
+saves it to a file. Apache Airflow is the tool that does this automatically.
+
+Location: London, UK
+Frequency: Runs daily at midnight (00:00 UTC)
+Framework: Apache Airflow
+
+
+THE 3 STEPS (TASKS)
+-------------------
+
+STEP 1: FETCH WEATHER
+├─ What: Call the Open-Meteo weather API
+├─ Input: None (starts the process)
+├─ Output: Raw weather data (temperature, humidity, weather code)
+└─ Time: ~5 seconds
+
+STEP 2: TRANSFORM DATA
+├─ What: Clean and organize the data
+├─ Input: Raw data from Step 1
+├─ Output: Clean data with only needed info (temp, humidity, location, time)
+└─ Time: ~1-2 seconds
+
+STEP 3: SAVE TO FILE
+├─ What: Write clean data to a JSON file
+├─ Input: Clean data from Step 2
+├─ Output: JSON file saved in /data/ folder
+└─ Time: ~1 second
+
+TOTAL TIME: ~10 seconds per run
+
+
+HOW TO RUN
+----------
+
+1. Start Docker containers:
+   cd "c:\Users\Asus\Desktop\Skills Upgrade\ETL Pipeline\weather-etl-airflow"
+   docker-compose up -d
+
+2. Open Airflow UI:
+   http://localhost:8080
+   Username: admin
+   Password: admin
+
+3. Enable the DAG:
+   Click the toggle next to "weather_etl" to turn it ON
+
+4. Trigger manually (optional):
+   Click the play button (▶) to run immediately
+
+5. Monitor execution:
+   - Green = Success ✅
+   - Yellow = Running ⏳
+   - Red = Failed ❌
+
+
+OUTPUT FILES
+------------
+
+Location: /data/ folder
+
+Example: weather_20260114_012825.json
+
+Content:
+{
+  "timestamp": "2026-01-14T01:28:17.090956",
+  "location": {
+    "name": "London",
+    "latitude": 51.5074,
+    "longitude": -0.1278
+  },
+  "weather": {
+    "temperature_celsius": 6.0,
+    "humidity_percent": 80,
+    "weather_code": 3
+  }
+}
+
+
+KEY FILES
+---------
+
+dags/weather_etl_dag.py
+  → The main automation code (3 tasks)
+
+docker-compose.yml
+  → Settings to run Airflow in Docker
+
+requirements.txt
+  → Python packages needed
+
+.github/workflows/airflow-ci.yml
+  → Automatic tests when pushing to GitHub
+
+
+IMPORTANT CONCEPTS
+------------------
+
+DAG = A set of tasks in order (Directed Acyclic Graph)
+Task = One piece of work
+Schedule = When to run (@daily = every day)
+XCom = How tasks pass data to each other
+Executor = The engine that runs tasks
+
+
+TO STOP CONTAINERS
+-------------------
+
+docker-compose down
+
+
+TO VIEW LOGS
+-----------
+
+docker-compose logs airflow
+
+
+REMEMBER
+--------
+
+✅ This project teaches:
+  - How Airflow works
+  - Task dependencies
+  - Data transformation
+  - Automation
+
+✅ It runs automatically every day
+
+✅ You can monitor it in the web UI
+
+✅ Output files are in /data/ folder
+
+✅ All code is in GitHub (push updates there)
+
+
+Need help? Check README.md for detailed information.
+================================================================================
